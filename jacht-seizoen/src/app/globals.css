@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+.mainBackground{
+  background-image: url("/egolkepikwrpk.jpg");
+  background-size: cover;
+}

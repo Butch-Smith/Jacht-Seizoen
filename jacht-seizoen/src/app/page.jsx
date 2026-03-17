@@ -1,17 +1,19 @@
 import Link from "next/link";
-import CreateRoomScreen from "./CreateRoomScreen/page";
+import ScreenMain from "./components/ScreenMain";
 
 export default function Home() {
   return (
     <>
-    <main className="w-screen h-screen flex items-center px-6 py-10 flex-col">
-      <h1 className="text-4xl">hey whats up guys</h1>
-      <section className="flex w-full justify-center flex-col gap-4">
-        <Link href="./CreateRoomScreen">higufkfygui</Link>
-
-        <button className="w-full p-4 bg-gray-700 text-white text-center text-2xl font-bold">Maak kamer</button>
-      </section>
-    </main>
+      <ScreenMain>
+        <header className="w-full flex justify-center items-center h-1/5">
+          <h1 className="text-5xl text-white">Jacht Seizoen</h1>
+        </header>
+        <section className="flex flex-1 px-6 pt-4 flex-col justify-start gap-6">
+          <Link href="./InfoScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-white rounded-md">Mee doen</Link>
+          <Link href="./InfoScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-white rounded-md">Kamer maken</Link>
+          <Link href="./InfoScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-white rounded-md">Over spel</Link>
+        </section>
+      </ScreenMain>
     </>
   );
 }
