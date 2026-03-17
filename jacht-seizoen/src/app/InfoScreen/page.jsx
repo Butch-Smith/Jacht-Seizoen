@@ -4,10 +4,10 @@ const InfoScreen = () => {
     return (
         <>
             <ScreenMain>
-                <header className="w-full p-4">
+                <nav className="w-full flex items-center h-1/10 p-4">
                     <Link href="/" className="w-screen text-3xl font-bold text-white">Terug</Link>
-                </header>
-                <section className="w-full p-4 flex flex-1 flex-col gap-5">
+                </nav>
+                <section className="w-full overflow-y-scroll p-4 flex h-9/10 flex-col gap-5">
                     <div className="flex flex-col gap-2">
                         <h2 className="font-semibold text-3xl text-white">Algemene info</h2>
                         <p className="text-white text-xl">De jagers winnen als alle vluchters gevonden zijn, en de vluchters winnen als de tijd over is.</p>
