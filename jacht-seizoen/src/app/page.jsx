@@ -1,5 +1,7 @@
 import Link from "next/link";
 import ScreenMain from "./components/ScreenMain";
+import { FaArrowLeft } from "react-icons/fa";
+
 
 export default function Home() {
   return (
@@ -10,7 +12,7 @@ export default function Home() {
         </header>
         <section className="flex flex-1 px-6 pt-4 flex-col justify-start gap-6">
           <Link href="./InfoScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-blue-500 rounded-md">Mee doen</Link>
-          <Link href="./InfoScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-red-500 rounded-md">Kamer maken</Link>
+          <Link href="./CreateRoom" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-red-500 rounded-md">Kamer maken</Link>
           <Link href="./InfoScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-green-500 rounded-md">Over spel</Link>
         </section>
       </ScreenMain>
