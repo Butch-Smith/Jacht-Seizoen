@@ -8,7 +8,7 @@ import BackButton from "../components/BackButton";
 const CreateRoom = () => {
     return (
         <ScreenMain>
-            <BackButton></BackButton>
+            <BackButton />
             <header className="w-full h-1/10 flex justify-center items-start">
                 <h1 className="text-white text-4xl">Maak een kamer</h1>
             </header>
