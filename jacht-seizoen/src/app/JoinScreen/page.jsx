@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { useState, useEffect, useRef } from "react";
+import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
 import { db, auth } from "../../lib/firebase";
 import { signInAnonymously } from "firebase/auth";
 import ScreenMain from "../components/ScreenMain";
 import BackButton from "../components/BackButton";
+import Link from "next/link";
 
 const JoinScreen = () => {
   const [playerName, setPlayerName] = useState("");
@@ -12,29 +13,38 @@ const JoinScreen = () => {
   const [playerRole, setPlayerRole] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const linkRef = useRef(null);
 
-  if (!auth.currentUser) {
-    signInAnonymously(auth).catch(() => {});
-  }
+  useEffect(() => {
+    const initAuth = async () => {
+      if (!auth.currentUser) {
+        try {
+          const cred = await signInAnonymously(auth);
+          setUser(cred.user);
+        } catch (err) {
+          console.error("Anonymous sign-in failed:", err);
+          setError("Kon gebruiker niet aanmelden.");
+        }
+      } else {
+        setUser(auth.currentUser);
+      }
+    };
+    initAuth();
+  }, []);
 
-  const isFormValid =
-    playerName.trim() && roomCode.trim() && playerRole;
+  const isValid = playerName.trim() && roomCode.trim() && playerRole && user?.uid;
 
-  const getRoleColor = () => {
-    if (playerRole === "hunter") return "bg-red-500 hover:bg-red-600";
-    if (playerRole === "target") return "bg-blue-500 hover:bg-blue-600";
-    if (playerRole === "random") return "bg-green-500 hover:bg-green-600";
-    return "bg-zinc-700";
-  };
-
-  const handleJoinRoom = async () => {
-    if (!isFormValid) return;
+  const handleJoinRoom = async (e) => {
+    e.preventDefault();
+    if (!isValid) return;
 
     setLoading(true);
     setError("");
 
     try {
-      const roomRef = doc(db, "rooms", roomCode.toUpperCase());
+      const code = roomCode.toUpperCase();
+      const roomRef = doc(db, "rooms", code);
       const roomSnap = await getDoc(roomRef);
 
       if (!roomSnap.exists()) {
@@ -43,31 +53,57 @@ const JoinScreen = () => {
         return;
       }
 
-      const roomData = roomSnap.data();
-      let roleToAssign = playerRole;
+      const roomData = roomSnap.data() || {};
+      const existingPlayers = roomData.players || [];
 
-      if (playerRole === "random") {
-        roleToAssign = Math.random() > 0.5 ? "hunter" : "target";
+      const nameExists = existingPlayers.some(
+        (p) => p.name.toLowerCase() === playerName.trim().toLowerCase()
+      );
+      if (nameExists) {
+        setError("Deze naam is al in gebruik.");
+        setLoading(false);
+        return;
       }
 
-      const userId = auth.currentUser.uid;
+      let roleToAssign;
+      const hunterCount = existingPlayers.filter(p => p.role === "hunter").length;
+      const maxHunters = roomData.maxHunters || 1;
+
+      if (playerRole === "random") {
+        roleToAssign = hunterCount >= maxHunters ? "target" : (Math.random() > 0.5 ? "hunter" : "target");
+      } else {
+        roleToAssign = playerRole;
+      }
+
+      if (roleToAssign === "hunter" && hunterCount >= maxHunters) {
+        setError("Maximaal aantal jagers bereikt.");
+        setLoading(false);
+        return;
+      }
 
       const newPlayer = {
-        id: userId,
-        name: playerName,
+        id: user.uid,
+        name: playerName.trim(),
         role: roleToAssign,
         isHost: false,
+        joinedAt: new Date(),
       };
 
-      const updatedPlayers = [...(roomData.players || []), newPlayer];
-      await updateDoc(roomRef, { players: updatedPlayers });
+      console.log("Adding player to room array:", newPlayer);
 
-      localStorage.setItem("currentRoomId", roomCode.toUpperCase());
-      localStorage.setItem("currentPlayerName", playerName);
-      localStorage.setItem("currentPlayerId", userId);
+      await updateDoc(roomRef, {
+        players: arrayUnion(newPlayer),
+      });
 
-      window.location.href = "/WaitingRoom";
-    } catch {
+      console.log("Player added successfully!");
+
+      localStorage.setItem("currentRoomId", code);
+      localStorage.setItem("currentPlayerName", playerName.trim());
+      localStorage.setItem("currentPlayerId", user.uid);
+
+      linkRef.current?.click();
+    } catch (err) {
+      console.error("Join room error:", err);
       setError("Er is iets misgegaan bij het joinen.");
     } finally {
       setLoading(false);
@@ -77,18 +113,21 @@ const JoinScreen = () => {
   return (
     <ScreenMain>
       <BackButton />
-      <section className="w-full h-9/10">
-        <section className="p-4 h-full flex items-center flex-col gap-5">
-          <header className="flex items-center justify-center h-1/6">
-            <h1 className="text-4xl text-white font-bold">Doe mee!!</h1>
-          </header>
+      <section className="w-full h-9/10 flex flex-col justify-center items-center gap-5 p-4">
+        <header className="flex items-center justify-center w-full">
+          <h1 className="text-4xl text-white font-bold">Doe mee!</h1>
+        </header>
 
+        <form
+          onSubmit={handleJoinRoom}
+          className="flex w-full gap-6 flex-col p-0"
+        >
           <input
             type="text"
             placeholder="Kamer code..."
             value={roomCode}
             onChange={(e) => setRoomCode(e.target.value)}
-            className="p-4 border-4 rounded-lg border-zinc-600 text-2xl font-bold bg-black text-white placeholder-zinc-600 w-full"
+            className="p-4 border-2 rounded-2xl border-zinc-700 text-2xl font-semibold bg-zinc-900 text-white placeholder-zinc-500 w-full focus:outline-none focus:ring-2 focus:ring-white transition"
           />
 
           <input
@@ -96,64 +135,66 @@ const JoinScreen = () => {
             placeholder="Jouw naam..."
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="p-4 border-4 rounded-lg border-zinc-600 text-2xl font-bold bg-black text-white placeholder-zinc-600 w-full"
+            className="p-4 border-2 rounded-2xl border-zinc-700 text-2xl font-semibold bg-zinc-900 text-white placeholder-zinc-500 w-full focus:outline-none focus:ring-2 focus:ring-white transition"
           />
 
           <div className="flex w-full justify-center gap-4">
             <button
+              type="button"
               onClick={() => setPlayerRole("hunter")}
-              className={`flex-1 p-4 border-4 rounded-lg font-bold text-3xl ${
+              className={`flex-1 p-4 border-2 rounded-2xl font-bold text-3xl ${
                 playerRole === "hunter"
                   ? "border-red-500 text-white"
-                  : "border-zinc-600 text-zinc-500"
-              } bg-black`}
+                  : "border-zinc-700 text-zinc-400"
+              } bg-zinc-900`}
             >
               Jager
             </button>
-
             <button
+              type="button"
               onClick={() => setPlayerRole("target")}
-              className={`flex-1 p-4 border-4 rounded-lg font-bold text-3xl ${
+              className={`flex-1 p-4 border-2 rounded-2xl font-bold text-3xl ${
                 playerRole === "target"
                   ? "border-blue-500 text-white"
-                  : "border-zinc-600 text-zinc-500"
-              } bg-black`}
+                  : "border-zinc-700 text-zinc-400"
+              } bg-zinc-900`}
             >
               Vluchter
             </button>
           </div>
 
           <button
+            type="button"
             onClick={() => setPlayerRole("random")}
-            className={`w-full p-4 border-4 rounded-lg font-bold text-3xl ${
+            className={`w-full p-4 border-2 rounded-2xl font-bold text-3xl ${
               playerRole === "random"
                 ? "border-green-500 text-white"
-                : "border-zinc-600 text-zinc-500"
-            } bg-black`}
+                : "border-zinc-700 text-zinc-400"
+            } bg-zinc-900`}
           >
             Random
           </button>
 
           {error && (
-            <p className="text-red-400 text-center text-xl">{error}</p>
+            <p className="text-red-400 text-center font-medium">{error}</p>
           )}
 
           <button
-            onClick={handleJoinRoom}
-            disabled={!isFormValid || loading}
-            className={`w-full p-4 mt-auto text-3xl font-bold rounded-lg border-4 transition ${
-                !isFormValid || loading
-                ? "bg-zinc-700 border-zinc-700 text-zinc-400 cursor-not-allowed"
-                : playerRole === "hunter"
-                ? "bg-black border-red-500 text-white hover:bg-zinc-900"
-                : playerRole === "target"
-                ? "bg-black border-blue-500 text-white hover:bg-zinc-900"
-                : "bg-black border-green-500 text-white hover:bg-zinc-900"
+            type="submit"
+            disabled={!isValid || loading}
+            className={`w-full mt-4 p-4 text-2xl font-bold rounded-2xl transition ${
+              !isValid || loading
+                ? "bg-zinc-700 text-zinc-400 cursor-not-allowed"
+                : "bg-white text-black hover:bg-zinc-200 active:scale-95"
             }`}
-            >
-            {loading ? "Bezig met joinen..." : "Mee doen!!"}
-        </button>
-        </section>
+          >
+            {loading ? "Bezig met joinen..." : "Mee doen!"}
+          </button>
+
+          <Link href="/WaitingRoom" ref={linkRef} className="hidden">
+            Waiting Room
+          </Link>
+        </form>
       </section>
     </ScreenMain>
   );
