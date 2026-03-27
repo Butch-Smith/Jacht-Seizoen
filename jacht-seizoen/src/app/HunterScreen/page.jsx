@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
 import ScreenMain from "../components/ScreenMain";
-import { marker } from "leaflet";
+import { Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import TargetDisplay from "../components/TargetDisplay";
 
@@ -13,24 +13,32 @@ const HunterScreen = () => {
         {
             id: 1,
             name: "kiwi",
-            code: "12345"
+            code: "12345",
+            latitude: 52.3676,  // amsterdam
+            longitude: 4.9041
         },
         {
             id: 2,
             name: "kiwi",
-            code: "12345"
+            code: "12345",
+            latitude: 51.9244,  // rotterdam
+            longitude: 4.4777
         },
         {
             id: 3,
             name: "kiwi",
-            code: "12345"
+            code: "12345",
+            latitude: 52.0907,  // utrecht
+            longitude: 5.1214
         },
         {
             id: 4,
-            name: "kiwi", 
-            code: "12345"
+            name: "kiwi",
+            code: "12345",
+            latitude: 51.4416,  // eindhoven
+            longitude: 5.4697
         }
-    ]
+    ];
 
     //all of this is for the map
     const [mapOpen, setMapOpen] = useState(false);
@@ -40,13 +48,24 @@ const HunterScreen = () => {
     useEffect(() => {
         const initMap = async (lat, lng) => {
             const L = await import("leaflet");
-            const mapInstance = L.map("map", { zoomControl: false }).setView([lat, lng], 17);
+
+            const mapInstance = L.map("map", { zoomControl: false }).setView([lat, lng], 7);
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 attribution: "",
-                zoomControl: false,
             }).addTo(mapInstance);
-            L.marker([lat, lng]).addTo(mapInstance).bindPopup("you").openPopup();
+
+            L.marker([lat, lng])
+                .addTo(mapInstance)
+                .bindPopup("You")
+                .openPopup();
+            targets.forEach((target) => {
+                if (target.latitude && target.longitude) {
+                    L.marker([target.latitude, target.longitude])
+                        .addTo(mapInstance)
+                        .bindPopup(`${target.name} (${target.code})`);
+                }
+            });
         };
 
         if (navigator.geolocation) {
