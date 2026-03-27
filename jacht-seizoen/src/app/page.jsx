@@ -14,9 +14,9 @@ export default function Home() {
           <Link href="./JoinScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-blue-500 rounded-md">Mee doen</Link>
           <Link href="./CreateRoom" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-red-500 rounded-md">Kamer maken</Link>
           <Link href="./InfoScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-green-500 rounded-md">Over spel</Link>
-          <Link href="./HunterScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-pink-500 rounded-md">fortnite</Link>
-          <Link href="./ResultScreen" className="w-full bg-purple-700 p-4 text-white text-3xl font-bold border-4 border-yellow-500 rounded-md">pubg</Link>
-          <Link href="./TargetScreen" className="w-full bg-red-700 p-4 text-white text-3xl font-bold border-4 border-black rounded-md">fucking evil button that kills you</Link>
+          <Link href="./HunterScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-white rounded-md">Hunter scherm</Link>
+          <Link href="./ResultScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-white rounded-md">Results scherm</Link>
+          <Link href="./TargetScreen" className="w-full bg-black p-4 text-white text-3xl font-bold border-4 border-white rounded-md">Vluchter scherm</Link>
         </section>
       </ScreenMain>
     </>
